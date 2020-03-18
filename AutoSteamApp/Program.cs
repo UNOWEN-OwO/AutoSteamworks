@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -127,10 +127,6 @@ namespace AutoSteamApp
                     {
                         PressKey(sim, item.Key, true);
                     }
-
-                    PressKey(sim, (VirtualKeyCode)Settings.KeyCutsceneSkip, true);
-
-                    PressKey(sim, VirtualKeyCode.SPACE, true);
                 }
 
                 api.Dispose();
@@ -192,13 +188,14 @@ namespace AutoSteamApp
                             var before = MemoryHelper.Read<byte>(mhw, offset_buttonPressState);
 
                             var item = ordered[index];
-
+                            var count = 0;
                             byte after = before;
                             while (before == after && !ct.IsCancellationRequested)
                             {
                                 while (!IsCurrnetActiveMHW()) Logger.LogInfo("MHW not active.");
                                 PressKey(sim, item.Key);
-
+                                
+                                count++;
                                 after = MemoryHelper.Read<byte>(mhw, offset_buttonPressState);
                             }
 
@@ -227,16 +224,84 @@ namespace AutoSteamApp
                             // no more fuel
                             if (currentState == (int)ButtonPressingState.EndOfGame)
                             {
-                                if (sd.NaturalFuel + sd.StoredFuel < 10)
-                                {
-                                    Logger.LogInfo("No more fuel, stopping bot.");
-                                    shouldStop = true;
-                                    break;
-                                }
-
                                 if (sd.SteamGauge == 0)
                                 {
                                     PressKey(sim, VirtualKeyCode.SPACE);
+                                }
+                                var cleared = false;
+                                while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) != 8 && !ct.IsCancellationRequested)
+                                {
+                                    if (sd.NaturalFuel + sd.StoredFuel < 10)
+                                    {
+                                        Logger.LogInfo("No more fuel, stopping bot.");
+                                        shouldStop = true;
+                                        break;
+                                    }
+                                    cleared = false;
+                                    while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) == 2)
+                                    {
+                                        Logger.LogInfo($"Fuel Phase");  // 2
+                                        Thread.Sleep(100);
+                                        PressKey(sim, VirtualKeyCode.SPACE, true);
+                                        Thread.Sleep(100);
+                                    }
+                                    while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) == 12)
+                                    {
+                                        Logger.LogInfo($"Cutscene Phase"); // 12
+                                        Thread.Sleep(100);
+                                        PressKey(sim, (VirtualKeyCode)Settings.KeyCutsceneSkip, true);
+                                        Thread.Sleep(100);
+                                    }
+                                    while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) == 5)
+                                    {
+                                        if (cleared)
+                                        {
+                                            Logger.LogInfo($"Ready Phase Settleted"); // 5
+                                            Thread.Sleep(100);
+                                            PressKey(sim, VirtualKeyCode.SPACE, true);
+                                            Thread.Sleep(100);
+                                        }
+                                        else
+                                        {
+                                            Logger.LogInfo($"Ready Phase Unsettleted"); // 5
+                                            Thread.Sleep(100);
+                                            PressKey(sim, VirtualKeyCode.ESCAPE, true);
+                                            Thread.Sleep(100);
+                                            while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x5C5) == 1)
+                                            {
+                                                Logger.LogInfo($"Exit Burning");
+                                                Thread.Sleep(100);
+                                                PressKey(sim, VirtualKeyCode.LEFT, true);
+                                                Thread.Sleep(1000);
+                                                PressKey(sim, VirtualKeyCode.SPACE, true);
+                                                Thread.Sleep(1000);
+                                                while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) != 0)
+                                                {
+                                                    PressKey(sim, VirtualKeyCode.ESCAPE, true);
+                                                    Thread.Sleep(100);
+                                                }
+                                                    
+                                            }
+                                        }
+                                    }
+                                    while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) == 13)
+                                    {
+                                        Logger.LogInfo($"Settlement Phase"); // 13
+                                        Thread.Sleep(100);
+                                        PressKey(sim, VirtualKeyCode.ESCAPE, true);
+                                        Thread.Sleep(100);
+                                    }
+                                    while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) == 0)
+                                    {
+                                        Logger.LogInfo($"Idel Phase"); // 0
+                                        Thread.Sleep(100);
+                                        PressKey(sim, VirtualKeyCode.SPACE, true);
+                                        Thread.Sleep(1000);
+                                        PressKey(sim, VirtualKeyCode.SPACE, true);
+                                        Thread.Sleep(100);
+                                        cleared = true;
+                                    }
+                                    
                                 }
                             }
 
