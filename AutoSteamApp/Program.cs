@@ -213,8 +213,14 @@ namespace AutoSteamApp
                     }
 
                     var currentState = MemoryHelper.Read<byte>(mhw, offset_buttonPressState);
-                    while (currentState != (int)ButtonPressingState.BeginningOfSequence && !ct.IsCancellationRequested)
+                    while (currentState != (int)ButtonPressingState.BeginningOfSequence && !ct.IsCancellationRequested || MemoryHelper.Read<byte>(mhw, pointerAddress + 0x570) > 21)
                     {
+                        if (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x570) > 21 && MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) > 5)
+                        {
+                            Logger.LogInfo($"Item Reach Limit");
+                            PressKey(sim, VirtualKeyCode.ESCAPE, true);
+                            currentState = (int)ButtonPressingState.EndOfGame;
+                        }
                         Thread.Sleep(50);
                         try
                         {
