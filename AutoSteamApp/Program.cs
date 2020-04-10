@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -157,7 +157,7 @@ namespace AutoSteamApp
             {
                 InputSimulator sim = new InputSimulator();
 
-                SaveData sd = new SaveData(mhw, ct);
+                // SaveData sd = new SaveData(mhw, ct);
 
                 ulong starter = Settings.Off_Base + Settings.Off_SteamworksCombo;
 
@@ -220,12 +220,12 @@ namespace AutoSteamApp
                         {
                             if (currentState == (int)ButtonPressingState.EndOfGame)
                             {
-                                if (sd.NaturalFuel + sd.StoredFuel < 10)
+                                /*if (sd.NaturalFuel + sd.StoredFuel < 10)
                                 {
                                     Logger.LogInfo("No more fuel, stopping bot.");
                                     shouldStop = true;
                                     break;
-                                }
+                                }*/
                                 var cleared = false;
                                 // var last = -1;
                                 while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) != 8 && !ct.IsCancellationRequested)
