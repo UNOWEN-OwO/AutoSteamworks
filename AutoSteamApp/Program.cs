@@ -157,8 +157,6 @@ namespace AutoSteamApp
             {
                 InputSimulator sim = new InputSimulator();
 
-                // SaveData sd = new SaveData(mhw, ct);
-
                 ulong starter = Settings.Off_Base + Settings.Off_SteamworksCombo;
 
                 var pointerAddress = MemoryHelper.Read<ulong>(mhw, starter);
@@ -278,7 +276,8 @@ namespace AutoSteamApp
                                                 Thread.Sleep(1000);
                                             }
                                             while (MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) != 0
-                                                && MemoryHelper.Read<byte>(mhw, pointerAddress + 0x5C5) == 0)
+                                                && MemoryHelper.Read<byte>(mhw, pointerAddress + 0x5C5) == 0
+                                                && MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C) != 2)
                                             {
                                                 // Logger.LogInfo($"Phase " + MemoryHelper.Read<byte>(mhw, pointerAddress + 0x57C).ToString());
                                                 Logger.LogInfo($"Exit Here");
@@ -298,6 +297,8 @@ namespace AutoSteamApp
                                         Logger.LogInfo($"Idel Phase"); // 0
                                         PressKey(sim, VirtualKeyCode.SPACE, true);
                                         Thread.Sleep(1000);
+                                        PressKey(sim, VirtualKeyCode.SPACE, true);
+                                        Thread.Sleep(500);
                                         PressKey(sim, VirtualKeyCode.SPACE, true);
                                         Thread.Sleep(100);
                                         cleared = true;
